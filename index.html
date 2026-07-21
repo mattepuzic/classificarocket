@@ -8,26 +8,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .partita-card {
-            padding: 15px;
+            position: relative; /* Indispensabile per posizionare il badge in basso a destra */
+            padding: 18px 15px;
             margin-bottom: 15px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
         }
-        .box-delta-punti {
-            margin-top: 12px;
-            padding: 6px 12px;
-            background-color: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            display: inline-block;
-            font-size: 0.9rem;
+        /* Badge in basso a destra come nello screenshot */
+        .delta-in-basso-destra {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 1.05rem;
             font-weight: bold;
             font-family: monospace;
+            color: #38bdf8; /* Azzurro per far risaltare il ± */
+            background-color: rgba(15, 23, 42, 0.6);
+            padding: 2px 8px;
+            border-radius: 6px;
         }
-        .delta-pos { color: #10b981; } /* Verde per guadagno */
-        .delta-neg { color: #f43f5e; } /* Rosso per perdita */
     </style>
 </head>
 <body>
@@ -131,36 +132,31 @@
                     onSnapshot(qPart, (snapPart) => {
                         const listaPartite = [];
                         snapPart.forEach(doc => listaPartite.push(doc.data()));
+                        
+                        // Ordina temporale standard per i grafici
                         listaPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-                        // Render Storico Partite: invertiamo l'assegnazione dei numeri per correggere l'ordine visivo
+                        // INVERSIONE ORDINE STORICO: Invertiamo l'array per mostrare la prima partita in alto
+                        const partiteInvertite = listaPartite.slice().reverse();
+
                         const containerPartite = document.getElementById('lista-partite');
                         containerPartite.innerHTML = '';
-                        
-                        // Per mantenere l'ordine dei grafici inalterato ma invertire l'etichetta del numero partita nello storico:
-                        const partitePerStorico = listaPartite.slice(); // non facciamo reverse per non invertire l'ordine temporale
                         let numP = 1;
 
-                        partitePerStorico.forEach(p => {
+                        partiteInvertite.forEach(p => {
                             const mod = p.modalita ? ` [${p.modalita}]` : '';
                             
-                            const d1 = p.deltaSq1 !== undefined ? p.deltaSq1 : 0;
-                            const d2 = p.deltaSq2 !== undefined ? p.deltaSq2 : 0;
-                            
-                            const txtD1 = d1 > 0 ? `+${d1}` : `${d1}`;
-                            const txtD2 = d2 > 0 ? `+${d2}` : `${d2}`;
-                            
-                            const classD1 = d1 >= 0 ? 'delta-pos' : 'delta-neg';
-                            const classD2 = d2 >= 0 ? 'delta-pos' : 'delta-neg';
+                            // Recupera il valore assoluto della variazione punti
+                            const valDelta = Math.abs(p.deltaSq1 || p.deltaSq2 || 0);
 
                             containerPartite.innerHTML += `
                                 <div class="partita-card">
                                     <small style="color:#94a3b8;">🎮 Partita #${numP++}${mod} - 📅 ${p.data}</small><br>
-                                    <div style="margin-top: 6px; font-size: 1.1rem;">
+                                    <div style="margin-top: 6px; font-size: 1.15rem;">
                                         <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
                                     </div>
-                                    <div class="box-delta-punti">
-                                        ± Punteggio: <span class="${classD1}">${txtD1}</span> | <span class="${classD2}">${txtD2}</span> pt
+                                    <div class="delta-in-basso-destra">
+                                        ±${valDelta}
                                     </div>
                                 </div>`;
                         });

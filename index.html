@@ -19,7 +19,7 @@
 
         /* Card della singola partita */
         .partita-card {
-            position: relative; /* Indispensabile per ancorare il badge in basso a destra */
+            position: relative;
             padding: 16px 15px;
             margin-bottom: 12px;
             background-color: rgba(255, 255, 255, 0.05);
@@ -28,7 +28,7 @@
             text-align: center;
         }
 
-        /* Badge ±punteggio posizionato in basso a destra */
+        /* Badge ±punteggio in basso a destra */
         .delta-in-basso-destra {
             position: absolute;
             bottom: 8px;
@@ -49,7 +49,7 @@
     <h1>🏆 Classifica Rocket League</h1>
 
     <div style="margin-bottom: 25px; text-align: center;">
-        <a href="punteggi.html" class="btn-link">ℹ️ Come funciona il Punteggio WFER?</a>
+        <a href="punteggi.html" class="btn-link">ℹ️ Come funziona il Punteggio WFER?</a>
     </div>
 
     <div class="sezione-classifica">
@@ -119,8 +119,13 @@
         let grafico1 = null, grafico2 = null;
         const COLORI = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
 
-        // Funzione per ricavare il numero di settimana
+        // Variabili globali per memorizzare i dati senza listener annidati
+        let datiGiocatori = [];
+        let datiMarcatori = [];
+        let datiPartite = [];
+
         function getNumeroSettimana(d) {
+            if (!(d instanceof Date) || isNaN(d)) d = new Date();
             const date = new Date(d.getTime());
             date.setHours(0, 0, 0, 0);
             date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
@@ -128,88 +133,88 @@
             return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
         }
 
+        function aggiornaInterfaccia() {
+            if (!datiGiocatori.length && !datiPartite.length) return;
+
+            // 1. Render Marcatori
+            const tbodyMarc = document.getElementById('body-marcatori');
+            tbodyMarc.innerHTML = '';
+            let posM = 1;
+            datiMarcatori.forEach(d => {
+                tbodyMarc.innerHTML += `<tr><td>${posM++}</td><td><strong>${d.nome}</strong></td><td><strong>${d.gol}</strong></td></tr>`;
+            });
+
+            // 2. Render Storico Partite
+            const containerPartite = document.getElementById('lista-partite');
+            containerPartite.innerHTML = '';
+
+            const partitePerStorico = datiPartite.slice().reverse();
+            const gruppiSettimana = {};
+
+            partitePerStorico.forEach(p => {
+                let d = p.data ? new Date(p.data) : (p.timestamp ? new Date(p.timestamp) : new Date());
+                if (isNaN(d)) d = new Date();
+                
+                const numSett = getNumeroSettimana(d);
+                const anno = d.getFullYear();
+                const chiave = `Settimana ${numSett} (${anno})`;
+
+                if (!gruppiSettimana[chiave]) gruppiSettimana[chiave] = [];
+                gruppiSettimana[chiave].push(p);
+            });
+
+            for (const [settimana, partiteInSettimana] of Object.entries(gruppiSettimana)) {
+                containerPartite.innerHTML += `<div class="settimana-titolo">📅 ${settimana}</div>`;
+
+                partiteInSettimana.forEach(p => {
+                    const mod = p.modalita ? ` [${p.modalita}]` : '';
+                    const valDelta = Math.abs(p.deltaSq1 || p.deltaSq2 || 0);
+
+                    containerPartite.innerHTML += `
+                        <div class="partita-card">
+                            <small style="color:#94a3b8;">🎮 Partita #${p.numProgressivo}${mod} - 📅 ${p.data || ''}</small><br>
+                            <div style="margin-top: 6px; font-size: 1.15rem;">
+                                <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
+                            </div>
+                            <div class="delta-in-basso-destra">
+                                ±${valDelta}
+                            </div>
+                        </div>`;
+                });
+            }
+
+            // 3. Render Classifica Generale e Grafici
+            elaboraDatiEGrafici(datiGiocatori, datiPartite);
+        }
+
         function caricaDati() {
-            // 1. Carica Giocatori
-            onSnapshot(collection(db, "giocatori"), (snapGiocatori) => {
-                const listaGiocatori = [];
-                snapGiocatori.forEach(doc => {
-                    const d = doc.data();
-                    if (!d.gioco || d.gioco === "fifa_24") listaGiocatori.push(d);
+            // Listener Giocatori
+            onSnapshot(collection(db, "giocatori"), (snap) => {
+                datiGiocatori = [];
+                snap.forEach(doc => datiGiocatori.push(doc.data()));
+                aggiornaInterfaccia();
+            });
+
+            // Listener Marcatori
+            onSnapshot(collection(db, "marcatori"), (snap) => {
+                datiMarcatori = [];
+                snap.forEach(doc => datiMarcatori.push(doc.data()));
+                datiMarcatori.sort((a, b) => (b.gol || 0) - (a.gol || 0));
+                aggiornaInterfaccia();
+            });
+
+            // Listener Partite
+            onSnapshot(collection(db, "partite"), (snap) => {
+                datiPartite = [];
+                snap.forEach(doc => datiPartite.push(doc.data()));
+                
+                // Ordine cronologico
+                datiPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                datiPartite.forEach((p, index) => {
+                    p.numProgressivo = index + 1;
                 });
 
-                // 2. Carica Marcatori
-                onSnapshot(collection(db, "marcatori"), (snapMarc) => {
-                    const listaMarcatori = [];
-                    snapMarc.forEach(doc => {
-                        const d = doc.data();
-                        if (!d.gioco || d.gioco === "fifa_24") listaMarcatori.push(d);
-                    });
-                    listaMarcatori.sort((a, b) => b.gol - a.gol);
-
-                    const tbodyMarc = document.getElementById('body-marcatori');
-                    tbodyMarc.innerHTML = '';
-                    let posM = 1;
-                    listaMarcatori.forEach(d => {
-                        tbodyMarc.innerHTML += `<tr><td>${posM++}</td><td><strong>${d.nome}</strong></td><td><strong>${d.gol}</strong></td></tr>`;
-                    });
-
-                    // 3. Carica Partite
-                    onSnapshot(collection(db, "partite"), (snapPart) => {
-                        const listaPartite = [];
-                        snapPart.forEach(doc => {
-                            const d = doc.data();
-                            if (!d.gioco || d.gioco === "fifa_24") listaPartite.push(d);
-                        });
-                        
-                        // Ordina in ordine cronologico
-                        listaPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-                        listaPartite.forEach((p, index) => {
-                            p.numProgressivo = index + 1;
-                        });
-
-                        // RENDER STORICO PARTITE
-                        const containerPartite = document.getElementById('lista-partite');
-                        containerPartite.innerHTML = '';
-
-                        const partitePerStorico = listaPartite.slice().reverse();
-
-                        const gruppiSettimana = {};
-                        partitePerStorico.forEach(p => {
-                            const d = p.data ? new Date(p.data) : new Date(p.timestamp || Date.now());
-                            const numSett = getNumeroSettimana(d);
-                            const anno = d.getFullYear();
-                            const chiave = `Settimana ${numSett} (${anno})`;
-
-                            if (!gruppiSettimana[chiave]) {
-                                gruppiSettimana[chiave] = [];
-                            }
-                            gruppiSettimana[chiave].push(p);
-                        });
-
-                        for (const [settimana, partiteInSettimana] of Object.entries(gruppiSettimana)) {
-                            containerPartite.innerHTML += `<div class="settimana-titolo">📅 ${settimana}</div>`;
-
-                            partiteInSettimana.forEach(p => {
-                                const mod = p.modalita ? ` [${p.modalita}]` : '';
-                                const valDelta = Math.abs(p.deltaSq1 || p.deltaSq2 || 0);
-
-                                containerPartite.innerHTML += `
-                                    <div class="partita-card">
-                                        <small style="color:#94a3b8;">🎮 Partita #${p.numProgressivo}${mod} - 📅 ${p.data}</small><br>
-                                        <div style="margin-top: 6px; font-size: 1.15rem;">
-                                            <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
-                                        </div>
-                                        <div class="delta-in-basso-destra">
-                                            ±${valDelta}
-                                        </div>
-                                    </div>`;
-                            });
-                        }
-
-                        elaboraDatiEGrafici(listaGiocatori, listaPartite);
-                    });
-                });
+                aggiornaInterfaccia();
             });
         }
 
@@ -220,7 +225,7 @@
 
             giocatori.forEach(g => {
                 const arrPunti = new Array(numPartiteTotali + 1);
-                arrPunti[numPartiteTotali] = g.punti;
+                arrPunti[numPartiteTotali] = g.punti || 1000;
                 storiciPunti[g.nome] = arrPunti;
 
                 const arrGol = new Array(numPartiteTotali + 1);
@@ -271,13 +276,13 @@
                 posizioniPassate[item.nome] = index + 1;
             });
 
-            giocatori.sort((a, b) => b.punti - a.punti);
+            const giocatoriOrdinati = [...giocatori].sort((a, b) => (b.punti || 0) - (a.punti || 0));
 
             const tbodyGen = document.getElementById('body-generale');
             tbodyGen.innerHTML = '';
             let posAttuale = 1;
 
-            giocatori.forEach(d => {
+            giocatoriOrdinati.forEach(d => {
                 const varPunti = d.ultimaVariazione || 0;
                 let badgeVar = `<span class="badge-var var-neutra">= 0</span>`;
                 if (varPunti > 0) badgeVar = `<span class="badge-var var-positiva">+${varPunti}</span>`;
@@ -339,41 +344,47 @@
             });
 
             const margineY = (maxPunti - minPunti) * 0.1 || 20;
-            const yMinConfig = Math.floor(minPunti - margineY);
-            const yMaxConfig = Math.ceil(maxPunti + margineY);
+            const yMinConfig = isFinite(minPunti) ? Math.floor(minPunti - margineY) : 900;
+            const yMaxConfig = isFinite(maxPunti) ? Math.ceil(maxPunti + margineY) : 1100;
 
             if (grafico1) grafico1.destroy();
-            grafico1 = new Chart(document.getElementById('graficoGenerale').getContext('2d'), {
-                type: 'line',
-                data: { labels: etichettePartite, datasets: datasetsPunti },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { 
-                            min: yMinConfig,
-                            max: yMaxConfig,
-                            ticks: { color: '#f8fafc' }, 
-                            grid: { color: 'rgba(255,255,255,0.05)' } 
-                        }
-                    },
-                    plugins: { legend: { labels: { color: '#f8fafc' } } }
-                }
-            });
+            const ctx1 = document.getElementById('graficoGenerale');
+            if (ctx1) {
+                grafico1 = new Chart(ctx1.getContext('2d'), {
+                    type: 'line',
+                    data: { labels: etichettePartite, datasets: datasetsPunti },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { 
+                                min: yMinConfig,
+                                max: yMaxConfig,
+                                ticks: { color: '#f8fafc' }, 
+                                grid: { color: 'rgba(255,255,255,0.05)' } 
+                            }
+                        },
+                        plugins: { legend: { labels: { color: '#f8fafc' } } }
+                    }
+                });
+            }
 
             if (grafico2) grafico2.destroy();
-            grafico2 = new Chart(document.getElementById('graficoMarcatori').getContext('2d'), {
-                type: 'line',
-                data: { labels: etichettePartite, datasets: datasetsGol },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-                    },
-                    plugins: { legend: { labels: { color: '#f8fafc' } } }
-                }
-            });
+            const ctx2 = document.getElementById('graficoMarcatori');
+            if (ctx2) {
+                grafico2 = new Chart(ctx2.getContext('2d'), {
+                    type: 'line',
+                    data: { labels: etichettePartite, datasets: datasetsGol },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        },
+                        plugins: { legend: { labels: { color: '#f8fafc' } } }
+                    }
+                });
+            }
         }
 
         caricaDati();

@@ -39,6 +39,13 @@
             margin-bottom: 12px;
             text-align: left;
         }
+        .giocatore-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .giocatore-row select { flex: 2; }
+        .giocatore-row input { flex: 1; }
         label {
             display: block;
             margin-bottom: 5px;
@@ -107,23 +114,51 @@
         <form id="form-partita">
             <div class="box-sezione">
                 <h3>🔵 Squadra 1</h3>
-                <div class="form-group" id="f-sq1-g1"><label>Giocatore 1:</label><select id="sq1-g1" required></select></div>
-                <div class="form-group" id="f-sq1-g2"><label>Giocatore 2:</label><select id="sq1-g2"></select></div>
-                <div class="form-group" id="f-sq1-g3"><label>Giocatore 3:</label><select id="sq1-g3"></select></div>
-                <div class="form-group">
-                    <label>Gol Segnati Squadra 1:</label>
-                    <input type="number" id="gol1" min="0" value="0" required>
+                <div class="form-group" id="f-sq1-g1">
+                    <label>Giocatore 1 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq1-g1" required></select>
+                        <input type="number" id="gol-sq1-g1" placeholder="Gol" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group" id="f-sq1-g2">
+                    <label>Giocatore 2 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq1-g2"></select>
+                        <input type="number" id="gol-sq1-g2" placeholder="Gol" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group" id="f-sq1-g3">
+                    <label>Giocatore 3 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq1-g3"></select>
+                        <input type="number" id="gol-sq1-g3" placeholder="Gol" min="0" value="0">
+                    </div>
                 </div>
             </div>
 
             <div class="box-sezione">
                 <h3>🔴 Squadra 2</h3>
-                <div class="form-group" id="f-sq2-g1"><label>Giocatore 1:</label><select id="sq2-g1" required></select></div>
-                <div class="form-group" id="f-sq2-g2"><label>Giocatore 2:</label><select id="sq2-g2"></select></div>
-                <div class="form-group" id="f-sq2-g3"><label>Giocatore 3:</label><select id="sq2-g3"></select></div>
-                <div class="form-group">
-                    <label>Gol Segnati Squadra 2:</label>
-                    <input type="number" id="gol2" min="0" value="0" required>
+                <div class="form-group" id="f-sq2-g1">
+                    <label>Giocatore 1 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq2-g1" required></select>
+                        <input type="number" id="gol-sq2-g1" placeholder="Gol" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group" id="f-sq2-g2">
+                    <label>Giocatore 2 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq2-g2"></select>
+                        <input type="number" id="gol-sq2-g2" placeholder="Gol" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group" id="f-sq2-g3">
+                    <label>Giocatore 3 e Gol:</label>
+                    <div class="giocatore-row">
+                        <select id="sq2-g3"></select>
+                        <input type="number" id="gol-sq2-g3" placeholder="Gol" min="0" value="0">
+                    </div>
                 </div>
             </div>
 
@@ -220,7 +255,6 @@
 
         async function popolaDati() {
             try {
-                // Carica TUTTI i Giocatori senza filtri
                 const snapG = await getDocs(collection(db, "giocatori"));
                 listaGiocatori = [];
                 snapG.forEach(d => {
@@ -229,7 +263,6 @@
                     listaGiocatori.push(data);
                 });
 
-                // Carica TUTTI i Marcatori
                 const snapM = await getDocs(collection(db, "marcatori"));
                 listaMarcatori = [];
                 snapM.forEach(d => {
@@ -238,7 +271,6 @@
                     listaMarcatori.push(data);
                 });
 
-                // Popola selezioni partite
                 const selectsPartita = ['sq1-g1', 'sq1-g2', 'sq1-g3', 'sq2-g1', 'sq2-g2', 'sq2-g3'];
                 selectsPartita.forEach(sId => {
                     const el = document.getElementById(sId);
@@ -250,7 +282,6 @@
                     }
                 });
 
-                // Popola selezione modifica
                 const selectMod = document.getElementById('select-modifica-giocatore');
                 selectMod.innerHTML = '<option value="">-- Seleziona Giocatore --</option>';
                 listaGiocatori.forEach(g => {
@@ -263,7 +294,7 @@
             }
         }
 
-        // Seleziona Giocatore da Modificare
+        // Seleziona Giocatore per Modifica
         document.getElementById('select-modifica-giocatore').addEventListener('change', (e) => {
             const nomeSel = e.target.value;
             const gObj = listaGiocatori.find(g => g.nome === nomeSel);
@@ -280,7 +311,7 @@
             }
         });
 
-        // Modifica Giocatore Esistente
+        // Aggiorna Giocatore
         document.getElementById('btn-aggiorna-giocatore').addEventListener('click', async () => {
             const nomeVecchio = document.getElementById('select-modifica-giocatore').value;
             if (!nomeVecchio) return alert("Seleziona prima un giocatore!");
@@ -319,7 +350,7 @@
             location.reload();
         });
 
-        // Aggiungi Nuovo Giocatore
+        // Crea Nuovo Giocatore
         document.getElementById('btn-crea-giocatore').addEventListener('click', async () => {
             const nome = document.getElementById('nuovo-nome').value.trim();
             const punti = parseFloat(document.getElementById('nuovo-punti').value) || 1000;
@@ -383,7 +414,7 @@
             return { deltaSq1, deltaSq2 };
         }
 
-        // Salvataggio Partita
+        // Invio e Registrazione Partita
         document.getElementById('form-partita').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -391,19 +422,32 @@
             const [n1, n2] = mode.split('vs').map(Number);
 
             const nomiSq1 = [];
+            const golGiocatoriSq1 = [];
+            let gol1 = 0;
+
             for (let i = 1; i <= n1; i++) {
-                const val = document.getElementById(`sq1-g${i}`).value;
-                if (val) nomiSq1.push(val);
+                const valNome = document.getElementById(`sq1-g${i}`).value;
+                const valGol = parseInt(document.getElementById(`gol-sq1-g${i}`).value) || 0;
+                if (valNome) {
+                    nomiSq1.push(valNome);
+                    golGiocatoriSq1.push({ nome: valNome, gol: valGol });
+                    gol1 += valGol;
+                }
             }
 
             const nomiSq2 = [];
-            for (let i = 1; i <= n2; i++) {
-                const val = document.getElementById(`sq2-g${i}`).value;
-                if (val) nomiSq2.push(val);
-            }
+            const golGiocatoriSq2 = [];
+            let gol2 = 0;
 
-            const gol1 = parseInt(document.getElementById('gol1').value);
-            const gol2 = parseInt(document.getElementById('gol2').value);
+            for (let i = 1; i <= n2; i++) {
+                const valNome = document.getElementById(`sq2-g${i}`).value;
+                const valGol = parseInt(document.getElementById(`gol-sq2-g${i}`).value) || 0;
+                if (valNome) {
+                    nomiSq2.push(valNome);
+                    golGiocatoriSq2.push({ nome: valNome, gol: valGol });
+                    gol2 += valGol;
+                }
+            }
 
             const sq1Objs = listaGiocatori.filter(g => nomiSq1.includes(g.nome));
             const sq2Objs = listaGiocatori.filter(g => nomiSq2.includes(g.nome));
@@ -411,12 +455,20 @@
             const res = calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode);
             const oggi = new Date().toISOString().split('T')[0];
 
+            // Mappa gol singoli per lo storico
+            const golMap = {};
+            [...golGiocatoriSq1, ...golGiocatoriSq2].forEach(item => {
+                golMap[item.nome] = item.gol;
+            });
+
+            // 1. Salva la Partita
             await addDoc(collection(db, "partite"), {
                 squadra1: nomiSq1.join(", "),
                 squadra2: nomiSq2.join(", "),
                 listaSq1: nomiSq1,
                 listaSq2: nomiSq2,
                 gol1, gol2,
+                golMap: golMap,
                 deltaSq1: res.deltaSq1,
                 deltaSq2: res.deltaSq2,
                 modalita: mode,
@@ -424,13 +476,13 @@
                 timestamp: Date.now()
             });
 
+            // 2. Aggiorna Punti WFER dei Giocatori
             for (const g of sq1Objs) {
                 await updateDoc(doc(db, "giocatori", g.idDoc), {
                     punti: Math.round((g.punti + res.deltaSq1) * 10) / 10,
                     ultimaVariazione: res.deltaSq1
                 });
             }
-
             for (const g of sq2Objs) {
                 await updateDoc(doc(db, "giocatori", g.idDoc), {
                     punti: Math.round((g.punti + res.deltaSq2) * 10) / 10,
@@ -438,7 +490,25 @@
                 });
             }
 
-            alert(`Partita salvata con successo!\nModalità: ${mode}\nDelta Sq1: ${res.deltaSq1}\nDelta Sq2: ${res.deltaSq2}`);
+            // 3. Aggiorna Totale Gol nella Classifica Marcatori
+            const tuttiGol = [...golGiocatoriSq1, ...golGiocatoriSq2];
+            for (const item of tuttiGol) {
+                if (item.gol > 0) {
+                    const mObj = listaMarcatori.find(m => m.nome === item.nome);
+                    if (mObj) {
+                        await updateDoc(doc(db, "marcatori", mObj.idDoc), {
+                            gol: (mObj.gol || 0) + item.gol
+                        });
+                    } else {
+                        await addDoc(collection(db, "marcatori"), {
+                            nome: item.nome,
+                            gol: item.gol
+                        });
+                    }
+                }
+            }
+
+            alert(`Partita salvata con successo!\nRisultato: ${gol1} - ${gol2}\nDelta Sq1: ${res.deltaSq1} | Delta Sq2: ${res.deltaSq2}`);
             location.reload();
         });
 

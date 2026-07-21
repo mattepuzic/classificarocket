@@ -29,7 +29,6 @@
             margin-bottom: 20px;
         }
         
-        /* Layout a Colonne Affiancate */
         .squadre-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -360,6 +359,7 @@
                 });
             } else {
                 await addDoc(collection(db, "marcatori"), {
+                    gioco: "fifa_24",
                     nome: nuovoNome,
                     gol: nuoviGol
                 });
@@ -381,12 +381,14 @@
             }
 
             await addDoc(collection(db, "giocatori"), {
+                gioco: "fifa_24",
                 nome: nome,
                 punti: punti,
                 ultimaVariazione: 0
             });
 
             await addDoc(collection(db, "marcatori"), {
+                gioco: "fifa_24",
                 nome: nome,
                 gol: gol
             });
@@ -476,7 +478,9 @@
                 golMap[item.nome] = item.gol;
             });
 
+            // SALVA SU FIREBASE (Con campo gioco: "fifa_24" per la compatibilità con Grafico e Storico)
             await addDoc(collection(db, "partite"), {
+                gioco: "fifa_24",
                 squadra1: nomiSq1.join(", "),
                 squadra2: nomiSq2.join(", "),
                 listaSq1: nomiSq1,
@@ -513,6 +517,7 @@
                         });
                     } else {
                         await addDoc(collection(db, "marcatori"), {
+                            gioco: "fifa_24",
                             nome: item.nome,
                             gol: item.gol
                         });

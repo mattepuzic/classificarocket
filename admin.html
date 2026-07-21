@@ -152,7 +152,7 @@
                     </tr>`;
             }
 
-            // RIGA TOTALE GOL (Opzionale per quando non si conoscono i gol singoli)
+            // RIGA TOTALE GOL (Per quando non si conoscono i gol singoli)
             html += `
                 <tr style="border-top: 2px solid #334155; background-color: rgba(255,255,255,0.03);">
                     <td style="padding: 10px; text-align: right; font-weight: bold; color: #10b981;">TOTALE SQUADRA 1:</td>
@@ -170,12 +170,10 @@
             container.innerHTML = html;
         }
 
-        // Funzione ausiliaria per distribuire i gol in automatico
         async function distribuisciGolAutomatici(listaGiocatori, golTotali) {
             const mappaGol = {};
             if (listaGiocatori.length === 0 || golTotali <= 0) return mappaGol;
 
-            // Recupera gol totali dei giocatori dalla classifica marcatori
             const datiMarcatori = [];
             for (const nome of listaGiocatori) {
                 const snap = await getDoc(doc(db, "marcatori", `fifa_24_${nome}`));
@@ -183,29 +181,23 @@
                 datiMarcatori.push({ nome, golAttuali });
             }
 
-            // Ordina dal giocatore con MENO gol a quello con PIÙ gol
             datiMarcatori.sort((a, b) => a.golAttuali - b.golAttuali);
 
             const n = listaGiocatori.length;
             const base = Math.floor(golTotali / n);
             const resto = golTotali % n;
 
-            // Assegna la quota base a tutti
             datiMarcatori.forEach(g => {
                 mappaGol[g.nome] = base;
             });
 
-            // Gestione dei resti
             if (resto === 1) {
-                // 1 gol in più -> al primo (chi ha meno gol in classifica)
                 mappaGol[datiMarcatori[0].nome] += 1;
             } else if (resto === 2) {
                 if (n === 2) {
-                    // Se in 2vs2 avanzano 2 gol (non capita con modulo %, ma per sicurezza)
                     mappaGol[datiMarcatori[0].nome] += 1;
                     mappaGol[datiMarcatori[1].nome] += 1;
                 } else if (n >= 3) {
-                    // Se in 3vs3 avanzano 2 gol -> 1 all'ultimo (indice 0) e 1 al penultimo (indice 1)
                     mappaGol[datiMarcatori[0].nome] += 1;
                     mappaGol[datiMarcatori[1].nome] += 1;
                 }
@@ -253,7 +245,6 @@
                 return;
             }
 
-            // Determinazione gol finali Squadra 1
             let golSq1 = 0;
             let mapGolSq1 = {};
             if (sommaGolSingoliSq1 > 0) {
@@ -264,7 +255,6 @@
                 mapGolSq1 = await distribuisciGolAutomatici(sq1Giocatori, inputTotaleSq1);
             }
 
-            // Determinazione gol finali Squadra 2
             let golSq2 = 0;
             let mapGolSq2 = {};
             if (sommaGolSingoliSq2 > 0) {
@@ -280,7 +270,6 @@
             const mappaImportanza = { "1vs1": 20, "2vs2": 40, "3vs3": 60 };
             const I = mappaImportanza[modalita];
 
-            // 1. Recupero Punteggi Attuali
             let sommaPuntiSq1 = 0, sommaPuntiSq2 = 0;
             const datiSq1 = [], datiSq2 = [];
 
@@ -298,7 +287,6 @@
                 sommaPuntiSq2 += p;
             }
 
-            // 2. Calcolo WFER
             const mediaSq1 = sommaPuntiSq1 / datiSq1.length;
             const mediaSq2 = sommaPuntiSq2 / datiSq2.length;
             const dr = mediaSq1 - mediaSq2;
@@ -317,7 +305,6 @@
             const deltaSq1 = Math.round((I * (W1 - We1) * G) * 10) / 10;
             const deltaSq2 = Math.round((I * (W2 - We2) * G) * 10) / 10;
 
-            // 3. Salva Punti Aggiornati
             for (const item of datiSq1) {
                 const nuoviPunti = Math.round((item.punti + deltaSq1) * 10) / 10;
                 await setDoc(doc(db, "giocatori", `fifa_24_wfer_${item.nome}`), {
@@ -340,7 +327,6 @@
                 });
             }
 
-            // 4. Salva Marcatori
             for (const [nome, golFatti] of Object.entries(golIndividualiFinali)) {
                 const refM = doc(db, "marcatori", `fifa_24_${nome}`);
                 const snapM = await getDoc(refM);
@@ -348,7 +334,6 @@
                 await setDoc(refM, { gioco: "fifa_24", nome, gol: attuali + golFatti });
             }
 
-            // 5. Salva Partita
             await addDoc(collection(db, "partite"), {
                 gioco: "fifa_24",
                 modalita,

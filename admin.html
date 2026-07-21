@@ -29,6 +29,7 @@
             margin-bottom: 20px;
         }
         
+        /* Layout a Colonne Affiancate */
         .squadre-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -231,7 +232,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqdkXgmsURF8MGchtfRJnODJz-olwYfw8",
@@ -275,7 +276,9 @@
 
         async function popolaDati() {
             try {
-                const snapG = await getDocs(collection(db, "giocatori"));
+                // Legge i giocatori registrati con fifa_24
+                const qG = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
+                const snapG = await getDocs(qG);
                 listaGiocatori = [];
                 snapG.forEach(d => {
                     const data = d.data();
@@ -283,7 +286,9 @@
                     listaGiocatori.push(data);
                 });
 
-                const snapM = await getDocs(collection(db, "marcatori"));
+                // Legge i marcatori
+                const qM = query(collection(db, "marcatori"), where("gioco", "==", "fifa_24"));
+                const snapM = await getDocs(qM);
                 listaMarcatori = [];
                 snapM.forEach(d => {
                     const data = d.data();
@@ -348,14 +353,16 @@
             if (gObj) {
                 await updateDoc(doc(db, "giocatori", gObj.idDoc), {
                     nome: nuovoNome,
-                    punti: nuoviPunti
+                    punti: nuoviPunti,
+                    gioco: "fifa_24"
                 });
             }
 
             if (mObj) {
                 await updateDoc(doc(db, "marcatori", mObj.idDoc), {
                     nome: nuovoNome,
-                    gol: nuoviGol
+                    gol: nuoviGol,
+                    gioco: "fifa_24"
                 });
             } else {
                 await addDoc(collection(db, "marcatori"), {
@@ -478,7 +485,6 @@
                 golMap[item.nome] = item.gol;
             });
 
-            // SALVA SU FIREBASE (Con campo gioco: "fifa_24" per la compatibilità con Grafico e Storico)
             await addDoc(collection(db, "partite"), {
                 gioco: "fifa_24",
                 squadra1: nomiSq1.join(", "),

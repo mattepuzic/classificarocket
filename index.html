@@ -49,7 +49,7 @@
     <h1>🏆 Classifica Rocket League</h1>
 
     <div style="margin-bottom: 25px; text-align: center;">
-        <a href="punteggi.html" class="btn-link">ℹ️ Come funziona il Punteggio WFER?</a>
+        <a href="punteggi.html" class="btn-link">ℹ️ Come funciona il Punteggio WFER?</a>
     </div>
 
     <div class="sezione-classifica">
@@ -101,7 +101,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqdkXgmsURF8MGchtfRJnODJz-olwYfw8",
@@ -130,16 +130,20 @@
 
         function caricaDati() {
             // 1. Carica Giocatori
-            const qGen = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
-            onSnapshot(qGen, (snapGiocatori) => {
+            onSnapshot(collection(db, "giocatori"), (snapGiocatori) => {
                 const listaGiocatori = [];
-                snapGiocatori.forEach(doc => listaGiocatori.push(doc.data()));
+                snapGiocatori.forEach(doc => {
+                    const d = doc.data();
+                    if (!d.gioco || d.gioco === "fifa_24") listaGiocatori.push(d);
+                });
 
                 // 2. Carica Marcatori
-                const qMarc = query(collection(db, "marcatori"), where("gioco", "==", "fifa_24"));
-                onSnapshot(qMarc, (snapMarc) => {
+                onSnapshot(collection(db, "marcatori"), (snapMarc) => {
                     const listaMarcatori = [];
-                    snapMarc.forEach(doc => listaMarcatori.push(doc.data()));
+                    snapMarc.forEach(doc => {
+                        const d = doc.data();
+                        if (!d.gioco || d.gioco === "fifa_24") listaMarcatori.push(d);
+                    });
                     listaMarcatori.sort((a, b) => b.gol - a.gol);
 
                     const tbodyMarc = document.getElementById('body-marcatori');
@@ -150,27 +154,26 @@
                     });
 
                     // 3. Carica Partite
-                    const qPart = query(collection(db, "partite"), where("gioco", "==", "fifa_24"));
-                    onSnapshot(qPart, (snapPart) => {
+                    onSnapshot(collection(db, "partite"), (snapPart) => {
                         const listaPartite = [];
-                        snapPart.forEach(doc => listaPartite.push(doc.data()));
+                        snapPart.forEach(doc => {
+                            const d = doc.data();
+                            if (!d.gioco || d.gioco === "fifa_24") listaPartite.push(d);
+                        });
                         
-                        // Ordina in ordine cronologico (dalla prima giocata all'ultima) per il grafico
+                        // Ordina in ordine cronologico
                         listaPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-                        // Assegna il numero progressivo a ciascuna partita
                         listaPartite.forEach((p, index) => {
                             p.numProgressivo = index + 1;
                         });
 
-                        // RENDER STORICO PARTITE (Dalla più recente in alto alla più vecchia in basso)
+                        // RENDER STORICO PARTITE
                         const containerPartite = document.getElementById('lista-partite');
                         containerPartite.innerHTML = '';
 
-                        // Invertiamo l'array per lo storico visivo
                         const partitePerStorico = listaPartite.slice().reverse();
 
-                        // Raggruppa le partite per settimana
                         const gruppiSettimana = {};
                         partitePerStorico.forEach(p => {
                             const d = p.data ? new Date(p.data) : new Date(p.timestamp || Date.now());
@@ -184,7 +187,6 @@
                             gruppiSettimana[chiave].push(p);
                         });
 
-                        // Renderizza le partite raggruppate per settimana
                         for (const [settimana, partiteInSettimana] of Object.entries(gruppiSettimana)) {
                             containerPartite.innerHTML += `<div class="settimana-titolo">📅 ${settimana}</div>`;
 
@@ -226,7 +228,7 @@
                 storiciGol[g.nome] = arrGol;
             });
 
-            // Ricostruzione dello storico punti (gestisce sia 1vs1, 2vs2 sia le nuove 1vs2/2vs3)
+            // Ricostruzione dello storico punti
             for (let i = numPartiteTotali - 1; i >= 0; i--) {
                 const p = partite[i];
                 const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);

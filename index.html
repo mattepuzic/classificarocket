@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneo EA FC - Classifiche e Grafici</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <h1>🏆 Classifica EA FC / FIFA</h1>
+
+    <div style="margin-bottom: 25px;">
+        <a href="punteggi.html" class="btn-link">ℹ️ Come funziona il Punteggio WFER?</a>
+    </div>
+
+    <div class="sezione-classifica">
+        <h2>🥇 Classifica Ranking (WFER)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Giocatore</th>
+                    <th>Punti Attuali</th>
+                    <th>Ultima Partita</th>
+                    <th>Trend (3 Partite)</th>
+                </tr>
+            </thead>
+            <tbody id="body-generale"></tbody>
+        </table>
+
+        <div class="grafico-box">
+            <h3>📈 Storico Punti per Numero di Partite</h3>
+            <canvas id="graficoGenerale"></canvas>
+        </div>
+    </div>
+
+    <hr class="divisore">
+
+    <div class="sezione-classifica">
+        <h2>⚽ Classifica Marcatori</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Giocatore</th>
+                    <th>Gol Totali</th>
+                </tr>
+            </thead>
+            <tbody id="body-marcatori"></tbody>
+        </table>
+
+        <div class="grafico-box">
+            <h3>📈 Storico Gol Cumulativi per Partita</h3>
+            <canvas id="graficoMarcatori"></canvas>
+        </div>
+    </div>
+
+    <hr class="divisore">
+
+    <h2>⚽ Ultimi Risultati Partite</h2>
+    <div id="lista-partite"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqdkXgmsURF8MGchtfRJnODJz-olwYfw8",
+            authDomain: "classifica-a16c1.firebaseapp.com",
+            projectId: "classifica-a16c1",
+            storageBucket: "classifica-a16c1.firebasestorage.app",
+            messagingSenderId: "724863537613",
+            appId: "1:724863537613:web:5c41a3eef6aa6adf7b3484",
+            measurementId: "G-MM9P5H2LM5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let grafico1 = null, grafico2 = null;
+        const COLORI = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
+
+        function caricaDati() {
+            // 1. Carica Giocatori
+            const qGen = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
+            onSnapshot(qGen, (snapGiocatori) => {
+                const listaGiocatori = [];
+                snapGiocatori.forEach(doc => listaGiocatori.push(doc.data()));
+
+                // 2. Carica Marcatori
+                const qMarc = query(collection(db, "marcatori"), where("gioco", "==", "fifa_24"));
+                onSnapshot(qMarc, (snapMarc) => {
+                    const listaMarcatori = [];
+                    snapMarc.forEach(doc => listaMarcatori.push(doc.data()));
+                    listaMarcatori.sort((a, b) => b.gol - a.gol);
+
+                    const tbodyMarc = document.getElementById('body-marcatori');
+                    tbodyMarc.innerHTML = '';
+                    let posM = 1;
+                    listaMarcatori.forEach(d => {
+                        tbodyMarc.innerHTML += `<tr><td>${posM++}</td><td><strong>${d.nome}</strong></td><td><strong>${d.gol}</strong></td></tr>`;
+                    });
+
+                    // 3. Carica Partite
+                    const qPart = query(collection(db, "partite"), where("gioco", "==", "fifa_24"));
+                    onSnapshot(qPart, (snapPart) => {
+                        const listaPartite = [];
+                        snapPart.forEach(doc => listaPartite.push(doc.data()));
+                        listaPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                        // Render Storico Partite
+                        const containerPartite = document.getElementById('lista-partite');
+                        containerPartite.innerHTML = '';
+                        let numP = 1;
+                        listaPartite.slice().reverse().forEach(p => {
+                            const mod = p.modalita ? ` [${p.modalita} | I=${p.importanza}]` : '';
+                            containerPartite.innerHTML += `
+                                <div class="partita-card">
+                                    <small style="color:#94a3b8;">🎮 Partita #${numP++}${mod} - 📅 ${p.data}</small><br>
+                                    <span style="margin-top: 5px; display: inline-block;">
+                                        <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
+                                    </span>
+                                </div>`;
+                        });
+
+                        // Calcola Storico Punti/Gol e Renderizza Tabella Generale + Grafici
+                        elaboraDatiEGrafici(listaGiocatori, listaPartite);
+                    });
+                });
+            });
+        }
+
+        function elaboraDatiEGrafici(giocatori, partite) {
+            const numPartiteTotali = partite.length;
+            const storiciPunti = {};
+            const storiciGol = {};
+
+            // 1. Ricostruzione dell'andamento punti parte dal Punteggio Attuale REALE del DB
+            giocatori.forEach(g => {
+                const arrPunti = new Array(numPartiteTotali + 1);
+                arrPunti[numPartiteTotali] = g.punti; // Punteggio attuale
+                storiciPunti[g.nome] = arrPunti;
+
+                const arrGol = new Array(numPartiteTotali + 1);
+                arrGol[numPartiteTotali] = 0; // Verrà popolato dopo
+                storiciGol[g.nome] = arrGol;
+            });
+
+            // Ricostruzione a ritroso dell'andamento punti
+            for (let i = numPartiteTotali - 1; i >= 0; i--) {
+                const p = partite[i];
+                const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);
+                const sq2 = p.listaSq2 || (p.squadra2 ? p.squadra2.split(', ').map(s => s.trim()) : []);
+                const d1 = p.deltaSq1 || 0;
+                const d2 = p.deltaSq2 || 0;
+
+                giocatori.forEach(g => {
+                    const nome = g.nome;
+                    const puntiSuccessivi = storiciPunti[nome][i + 1];
+
+                    if (sq1.includes(nome)) {
+                        storiciPunti[nome][i] = Math.round((puntiSuccessivi - d1) * 10) / 10;
+                    } else if (sq2.includes(nome)) {
+                        storiciPunti[nome][i] = Math.round((puntiSuccessivi - d2) * 10) / 10;
+                    } else {
+                        storiciPunti[nome][i] = puntiSuccessivi;
+                    }
+                });
+            }
+
+            // Ricostruzione in avanti dei gol cumulativi
+            giocatori.forEach(g => {
+                let sommaGol = 0;
+                storiciGol[g.nome][0] = 0;
+                partite.forEach((p, i) => {
+                    const golMap = p.golMap || {};
+                    const fatti = golMap[g.nome] || 0;
+                    sommaGol += fatti;
+                    storiciGol[g.nome][i + 1] = sommaGol;
+                });
+            });
+
+            // 2. Calcolo Trend Posizioni Ultime 3 Partite
+            const idxTrePartiteFa = Math.max(0, numPartiteTotali - 3);
+            
+            // Classifica N partite fa
+            const rankingPassato = giocatori.map(g => ({
+                nome: g.nome,
+                punti: storiciPunti[g.nome][idxTrePartiteFa]
+            })).sort((a, b) => b.punti - a.punti);
+
+            const posizioniPassate = {};
+            rankingPassato.forEach((item, index) => {
+                posizioniPassate[item.nome] = index + 1;
+            });
+
+            // Classifica Attuale
+            giocatori.sort((a, b) => b.punti - a.punti);
+
+            const tbodyGen = document.getElementById('body-generale');
+            tbodyGen.innerHTML = '';
+            let posAttuale = 1;
+
+            giocatori.forEach(d => {
+                const varPunti = d.ultimaVariazione || 0;
+                let badgeVar = `<span class="badge-var var-neutra">= 0</span>`;
+                if (varPunti > 0) badgeVar = `<span class="badge-var var-positiva">+${varPunti}</span>`;
+                else if (varPunti < 0) badgeVar = `<span class="badge-var var-negativa">${varPunti}</span>`;
+
+                const posVecchia = posizioniPassate[d.nome] || posAttuale;
+                let iconaTrend = `<span style="color:#94a3b8; font-weight:bold;">➖</span>`;
+                
+                if (posAttuale < posVecchia) {
+                    iconaTrend = `<span style="color:#10b981; font-weight:bold; font-size:1.1rem;">⬆️</span>`;
+                } else if (posAttuale > posVecchia) {
+                    iconaTrend = `<span style="color:#f43f5e; font-weight:bold; font-size:1.1rem;">⬇️</span>`;
+                }
+
+                tbodyGen.innerHTML += `
+                    <tr>
+                        <td>${posAttuale++}</td>
+                        <td><strong>${d.nome}</strong></td>
+                        <td>${d.punti}</td>
+                        <td>${badgeVar}</td>
+                        <td style="text-align:center;">${iconaTrend}</td>
+                    </tr>`;
+            });
+
+            // 3. Renderizza i Grafici
+            const etichettePartite = ['Inizio', ...partite.map((_, i) => `Partita ${i + 1}`)];
+            const datasetsPunti = [];
+            const datasetsGol = [];
+
+            giocatori.forEach((g, idx) => {
+                const color = COLORI[idx % COLORI.length];
+                
+                datasetsPunti.push({
+                    label: g.nome,
+                    data: storiciPunti[g.nome],
+                    borderColor: color,
+                    backgroundColor: color,
+                    borderWidth: 2,
+                    tension: 0.2,
+                    pointRadius: 4
+                });
+
+                datasetsGol.push({
+                    label: g.nome,
+                    data: storiciGol[g.nome],
+                    borderColor: color,
+                    backgroundColor: color,
+                    borderWidth: 2,
+                    tension: 0.2,
+                    pointRadius: 4
+                });
+            });
+
+            const ctx1 = document.getElementById('graficoGenerale').getContext('2d');
+            if (grafico1) grafico1.destroy();
+            grafico1 = new Chart(ctx1, {
+                type: 'line',
+                data: { labels: etichettePartite, datasets: datasetsPunti },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Partite', color: '#10b981' }, ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { title: { display: true, text: 'Punti WFER', color: '#10b981' }, ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+
+            const ctx2 = document.getElementById('graficoMarcatori').getContext('2d');
+            if (grafico2) grafico2.destroy();
+            grafico2 = new Chart(ctx2, {
+                type: 'line',
+                data: { labels: etichettePartite, datasets: datasetsGol },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Partite', color: '#f43f5e' }, ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { title: { display: true, text: 'Gol Totali', color: '#f43f5e' }, ticks: { color: '#f8fafc' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        caricaDati();
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+:root {
+    --bg-color: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --accent: #3b82f6;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+    color: var(--text-main);
+    text-align: center;
+    padding: 30px 15px;
+    margin: 0;
+    min-height: 100vh;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
+}
+
+h2 {
+    color: var(--text-main);
+    font-size: 1.5rem;
+    margin-top: 10px;
+}
+
+h3 {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+/* Selettori e Moduli */
+.selettori-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 650px;
+    margin: 0 auto 25px auto;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.select-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.select-group label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+select, input {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background-color: #0f172a;
+    color: #fff;
+    border: 1px solid #334155;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+select:focus, input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Tabelle */
+table {
+    margin: 20px auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    max-width: 650px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+th, td {
+    padding: 14px 18px;
+    text-align: center;
+}
+
+th {
+    background-color: rgba(15, 23, 42, 0.8);
+    color: var(--primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--card-border);
+}
+
+td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Contenitori Grafici e Card */
+.card, .grafico-box {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    padding: 25px;
+    margin: 20px auto;
+    max-width: 650px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    text-align: left;
+}
+
+.card-larga {
+    max-width: 800px;
+}
+
+/* Pulsanti e Link */
+button, .btn-link {
+    background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+button:hover, .btn-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+/* Elementi Specifici */
+.divisore {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+    max-width: 700px;
+    margin: 40px auto;
+}
+
+.partita-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left: 4px solid var(--primary);
+    max-width: 500px;
+    margin: 12px auto;
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.gol {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.formula-box {
+    background-color: #0f172a;
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+    font-family: 'Courier New', Courier, monospace;
+    color: #38bdf8;
+}
+
+.testo-evidenziato { color: var(--primary); font-weight: bold; }
+.testo-rosso { color: #f43f5e; font-weight: bold; }
+
+/* Badge per variazioni punteggi ultima partita */
+.badge-var {
+    font-size: 0.85rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.var-positiva {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid #10b981;
+}
+
+.var-negativa {
+    background-color: rgba(244, 63, 94, 0.2);
+    color: #f43f5e;
+    border: 1px solid #f43f5e;
+}
+
+.var-neutra {
+    background-color: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    border: 1px solid #94a3b8;
+}

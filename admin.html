@@ -15,19 +15,19 @@
             color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .box-sezione {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
         .box-modalita {
             background: #0f172a;
             border: 2px solid #38bdf8;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-        }
-        .squadra-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .form-group {
             margin-bottom: 12px;
@@ -49,25 +49,39 @@
             box-sizing: border-box;
             font-size: 1rem;
         }
-        .btn-salva {
+        .btn-azione {
             width: 100%;
-            padding: 14px;
-            background-color: #10b981;
+            padding: 12px;
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+            margin-top: 10px;
         }
-        .btn-salva:hover { background-color: #059669; }
+        .btn-green { background-color: #10b981; }
+        .btn-green:hover { background-color: #059669; }
+        .btn-blue { background-color: #3b82f6; }
+        .btn-blue:hover { background-color: #2563eb; }
+        .btn-orange { background-color: #f59e0b; }
+        .btn-orange:hover { background-color: #d97706; }
+        
+        hr.divisore-admin {
+            border: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 30px 0;
+        }
     </style>
 </head>
 <body>
 
-    <h1 style="text-align:center; margin-top:20px;">⚙️ Inserimento Partite</h1>
+    <h1 style="text-align:center; margin-top:20px;">⚙️ Pannello Admin Rocket League</h1>
 
     <div class="admin-container">
+        
+        <h2>🚀 1. Registra Nuova Partita</h2>
         
         <div class="box-modalita">
             <div class="form-group">
@@ -85,49 +99,73 @@
         </div>
 
         <form id="form-partita">
-            
-            <div class="squadra-box">
+            <div class="box-sezione">
                 <h3>🔵 Squadra 1</h3>
-                <div class="form-group" id="f-sq1-g1">
-                    <label>Giocatore 1:</label>
-                    <select id="sq1-g1" required><option value="">Caricamento giocatori...</option></select>
-                </div>
-                <div class="form-group" id="f-sq1-g2">
-                    <label>Giocatore 2:</label>
-                    <select id="sq1-g2"><option value="">Caricamento giocatori...</option></select>
-                </div>
-                <div class="form-group" id="f-sq1-g3">
-                    <label>Giocatore 3:</label>
-                    <select id="sq1-g3"><option value="">Caricamento giocatori...</option></select>
-                </div>
+                <div class="form-group" id="f-sq1-g1"><label>Giocatore 1:</label><select id="sq1-g1" required></select></div>
+                <div class="form-group" id="f-sq1-g2"><label>Giocatore 2:</label><select id="sq1-g2"></select></div>
+                <div class="form-group" id="f-sq1-g3"><label>Giocatore 3:</label><select id="sq1-g3"></select></div>
                 <div class="form-group">
                     <label>Gol Segnati Squadra 1:</label>
                     <input type="number" id="gol1" min="0" value="0" required>
                 </div>
             </div>
 
-            <div class="squadra-box">
+            <div class="box-sezione">
                 <h3>🔴 Squadra 2</h3>
-                <div class="form-group" id="f-sq2-g1">
-                    <label>Giocatore 1:</label>
-                    <select id="sq2-g1" required><option value="">Caricamento giocatori...</option></select>
-                </div>
-                <div class="form-group" id="f-sq2-g2">
-                    <label>Giocatore 2:</label>
-                    <select id="sq2-g2"><option value="">Caricamento giocatori...</option></select>
-                </div>
-                <div class="form-group" id="f-sq2-g3">
-                    <label>Giocatore 3:</label>
-                    <select id="sq2-g3"><option value="">Caricamento giocatori...</option></select>
-                </div>
+                <div class="form-group" id="f-sq2-g1"><label>Giocatore 1:</label><select id="sq2-g1" required></select></div>
+                <div class="form-group" id="f-sq2-g2"><label>Giocatore 2:</label><select id="sq2-g2"></select></div>
+                <div class="form-group" id="f-sq2-g3"><label>Giocatore 3:</label><select id="sq2-g3"></select></div>
                 <div class="form-group">
                     <label>Gol Segnati Squadra 2:</label>
                     <input type="number" id="gol2" min="0" value="0" required>
                 </div>
             </div>
 
-            <button type="submit" class="btn-salva">💾 Registra Partita</button>
+            <button type="submit" class="btn-azione btn-green">💾 Salva Partita</button>
         </form>
+
+        <hr class="divisore-admin">
+
+        <h2>✏️ 2. Modifica Giocatore Esistente</h2>
+        <div class="box-sezione">
+            <div class="form-group">
+                <label>Seleziona Giocatore da Modificare:</label>
+                <select id="select-modifica-giocatore"><option value="">-- Seleziona Giocatore --</option></select>
+            </div>
+            <div class="form-group">
+                <label>Nome Giocatore:</label>
+                <input type="text" id="edit-nome" placeholder="Nome">
+            </div>
+            <div class="form-group">
+                <label>Punti WFER Attuali:</label>
+                <input type="number" id="edit-punti" step="0.1" placeholder="Punti">
+            </div>
+            <div class="form-group">
+                <label>Gol Totali Marcatori:</label>
+                <input type="number" id="edit-gol" min="0" placeholder="Gol Totali">
+            </div>
+            <button id="btn-aggiorna-giocatore" class="btn-azione btn-orange">✏️ Aggiorna Dati Giocatore</button>
+        </div>
+
+        <hr class="divisore-admin">
+
+        <h2>➕ 3. Aggiungi Nuovo Giocatore</h2>
+        <div class="box-sezione">
+            <div class="form-group">
+                <label>Nome Nuovo Giocatore:</label>
+                <input type="text" id="nuovo-nome" placeholder="Es. Mario">
+            </div>
+            <div class="form-group">
+                <label>Punti Iniziali (Default: 1000):</label>
+                <input type="number" id="nuovo-punti" value="1000" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Gol Iniziali (Default: 0):</label>
+                <input type="number" id="nuovo-gol" value="0" min="0">
+            </div>
+            <button id="btn-crea-giocatore" class="btn-azione btn-blue">➕ Aggiungi Giocatore</button>
+        </div>
+
     </div>
 
     <script type="module">
@@ -148,10 +186,10 @@
         const db = getFirestore(app);
 
         let listaGiocatori = [];
+        let listaMarcatori = [];
 
         const modeSel = document.getElementById('modalita-selezionata');
 
-        // Mostra/Nasconde le tendine dei giocatori a seconda della modalità scelta
         function aggiornaInterfaccia() {
             const mode = modeSel.value;
             const [n1, n2] = mode.split('vs').map(Number);
@@ -172,41 +210,143 @@
                 }
             }
         }
-
         modeSel.addEventListener('change', aggiornaInterfaccia);
 
-        // Carica i giocatori da Firebase
-        async function popolaSelect() {
-            try {
-                const q = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
-                const snap = await getDocs(q);
-                
-                listaGiocatori = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    data.idDoc = d.id;
-                    listaGiocatori.push(data);
-                });
+        async function popolaDati() {
+            // Carica Giocatori
+            const qG = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
+            const snapG = await getDocs(qG);
+            listaGiocatori = [];
+            snapG.forEach(d => {
+                const data = d.data();
+                data.idDoc = d.id;
+                listaGiocatori.push(data);
+            });
 
-                const selects = ['sq1-g1', 'sq1-g2', 'sq1-g3', 'sq2-g1', 'sq2-g2', 'sq2-g3'];
-                selects.forEach(sId => {
-                    const el = document.getElementById(sId);
-                    if (el) {
-                        el.innerHTML = '<option value="">-- Seleziona --</option>';
-                        listaGiocatori.forEach(g => {
-                            el.innerHTML += `<option value="${g.nome}">${g.nome} (${g.punti} pt)</option>`;
-                        });
-                    }
-                });
+            // Carica Marcatori
+            const qM = query(collection(db, "marcatori"), where("gioco", "==", "fifa_24"));
+            const snapM = await getDocs(qM);
+            listaMarcatori = [];
+            snapM.forEach(d => {
+                const data = d.data();
+                data.idDoc = d.id;
+                listaMarcatori.push(data);
+            });
 
-                aggiornaInterfaccia();
-            } catch (err) {
-                console.error("Errore caricamento giocatori:", err);
-                alert("Errore nel caricare i giocatori da Firebase. Controlla la connessione.");
-            }
+            // Popola tendine per la partita
+            const selectsPartita = ['sq1-g1', 'sq1-g2', 'sq1-g3', 'sq2-g1', 'sq2-g2', 'sq2-g3'];
+            selectsPartita.forEach(sId => {
+                const el = document.getElementById(sId);
+                if (el) {
+                    el.innerHTML = '<option value="">-- Seleziona --</option>';
+                    listaGiocatori.forEach(g => {
+                        el.innerHTML += `<option value="${g.nome}">${g.nome} (${g.punti} pt)</option>`;
+                    });
+                }
+            });
+
+            // Popola tendina per modifica giocatore
+            const selectMod = document.getElementById('select-modifica-giocatore');
+            selectMod.innerHTML = '<option value="">-- Seleziona Giocatore --</option>';
+            listaGiocatori.forEach(g => {
+                selectMod.innerHTML += `<option value="${g.nome}">${g.nome}</option>`;
+            });
+
+            aggiornaInterfaccia();
         }
 
-        // Calcolo Algoritmo WFER per le modalità asimmetriche
+        // Quando selezioni un giocatore da modificare, riempi automaticamente i suoi dati
+        document.getElementById('select-modifica-giocatore').addEventListener('change', (e) => {
+            const nomeSel = e.target.value;
+            const gObj = listaGiocatori.find(g => g.nome === nomeSel);
+            const mObj = listaMarcatori.find(m => m.nome === nomeSel);
+
+            if (gObj) {
+                document.getElementById('edit-nome').value = gObj.nome;
+                document.getElementById('edit-punti').value = gObj.punti;
+                document.getElementById('edit-gol').value = mObj ? mObj.gol : 0;
+            } else {
+                document.getElementById('edit-nome').value = '';
+                document.getElementById('edit-punti').value = '';
+                document.getElementById('edit-gol').value = '';
+            }
+        });
+
+        // Pulsante: Aggiorna Giocatore Esistente
+        document.getElementById('btn-aggiorna-giocatore').addEventListener('click', async () => {
+            const nomeVecchio = document.getElementById('select-modifica-giocatore').value;
+            if (!nomeVecchio) return alert("Seleziona prima un giocatore!");
+
+            const nuovoNome = document.getElementById('edit-nome').value.trim();
+            const nuoviPunti = parseFloat(document.getElementById('edit-punti').value);
+            const nuoviGol = parseInt(document.getElementById('edit-gol').value);
+
+            if (!nuovoNome || isNaN(nuoviPunti) || isNaN(nuoviGol)) {
+                return alert("Compila tutti i campi correttamente!");
+            }
+
+            const gObj = listaGiocatori.find(g => g.nome === nomeVecchio);
+            const mObj = listaMarcatori.find(m => m.nome === nomeVecchio);
+
+            // Update Giocatore
+            if (gObj) {
+                await updateDoc(doc(db, "giocatori", gObj.idDoc), {
+                    nome: nuovoNome,
+                    punti: nuoviPunti
+                });
+            }
+
+            // Update o Crea Marcatore
+            if (mObj) {
+                await updateDoc(doc(db, "marcatori", mObj.idDoc), {
+                    nome: nuovoNome,
+                    gol: nuoviGol
+                });
+            } else {
+                await addDoc(collection(db, "marcatori"), {
+                    gioco: "fifa_24",
+                    nome: nuovoNome,
+                    gol: nuoviGol
+                });
+            }
+
+            alert("Giocatore aggiornato con successo!");
+            location.reload();
+        });
+
+        // Pulsante: Aggiungi Nuovo Giocatore
+        document.getElementById('btn-crea-giocatore').addEventListener('click', async () => {
+            const nome = document.getElementById('nuovo-nome').value.trim();
+            const punti = parseFloat(document.getElementById('nuovo-punti').value) || 1000;
+            const gol = parseInt(document.getElementById('nuovo-gol').value) || 0;
+
+            if (!nome) return alert("Inserisci il nome del nuovo giocatore!");
+
+            // Verifica che non esista già
+            if (listaGiocatori.some(g => g.nome.toLowerCase() === nome.toLowerCase())) {
+                return alert("Esiste già un giocatore con questo nome!");
+            }
+
+            // Aggiungi in giocatori
+            await addDoc(collection(db, "giocatori"), {
+                gioco: "fifa_24",
+                nome: nome,
+                punti: punti,
+                ultimaVariazione: 0
+            });
+
+            // Aggiungi in marcatori
+            await addDoc(collection(db, "marcatori"), {
+                gioco: "fifa_24",
+                nome: nome,
+                gol: gol
+            });
+
+            alert(`Giocatore "${nome}" aggiunto con successo!`);
+            location.reload();
+        });
+
+        // Algoritmo Calcolo WFER Partite
         function calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode) {
             const num1 = sq1Objs.length;
             const num2 = sq2Objs.length;
@@ -214,8 +354,7 @@
             const me1Reale = sq1Objs.reduce((a, g) => a + g.punti, 0) / num1;
             const me2Reale = sq2Objs.reduce((a, g) => a + g.punti, 0) / num2;
 
-            let I = 40; 
-            let H1 = 0, H2 = 0;
+            let I = 40, H1 = 0, H2 = 0;
 
             switch(mode) {
                 case "1vs1": I = 20; break;
@@ -244,6 +383,7 @@
             return { deltaSq1, deltaSq2 };
         }
 
+        // Salvataggio Partita
         document.getElementById('form-partita').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -271,7 +411,6 @@
             const res = calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode);
             const oggi = new Date().toISOString().split('T')[0];
 
-            // Salva su Firebase
             await addDoc(collection(db, "partite"), {
                 gioco: "fifa_24",
                 squadra1: nomiSq1.join(", "),
@@ -300,11 +439,11 @@
                 });
             }
 
-            alert(`Partita registrata con successo!\nModalità: ${mode}\nDelta Sq1: ${res.deltaSq1}\nDelta Sq2: ${res.deltaSq2}`);
+            alert(`Partita salvata con successo!\nModalità: ${mode}\nDelta Sq1: ${res.deltaSq1}\nDelta Sq2: ${res.deltaSq2}`);
             location.reload();
         });
 
-        popolaSelect();
+        popolaDati();
     </script>
 </body>
 </html>

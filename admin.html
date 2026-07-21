@@ -14,19 +14,12 @@
             padding: 20px;
         }
         .admin-container {
-            max-width: 650px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #1e293b;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .box-sezione {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .box-modalita {
             background: #0f172a;
@@ -34,6 +27,31 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+        }
+        
+        /* Layout a Colonne Affiancate */
+        .squadre-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 600px) {
+            .squadre-grid { grid-template-columns: 1fr; }
+        }
+
+        .squadra-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .box-sezione {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .form-group {
             margin-bottom: 12px;
@@ -46,6 +64,7 @@
         }
         .giocatore-row select { flex: 2; }
         .giocatore-row input { flex: 1; }
+        
         label {
             display: block;
             margin-bottom: 5px;
@@ -112,52 +131,54 @@
         </div>
 
         <form id="form-partita">
-            <div class="box-sezione">
-                <h3>🔵 Squadra 1</h3>
-                <div class="form-group" id="f-sq1-g1">
-                    <label>Giocatore 1 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq1-g1" required></select>
-                        <input type="number" id="gol-sq1-g1" placeholder="Gol" min="0" value="0">
+            <div class="squadre-grid">
+                <div class="squadra-box">
+                    <h3>🔵 Squadra 1</h3>
+                    <div class="form-group" id="f-sq1-g1">
+                        <label>Giocatore 1 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq1-g1" required></select>
+                            <input type="number" id="gol-sq1-g1" placeholder="Gol" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group" id="f-sq1-g2">
+                        <label>Giocatore 2 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq1-g2"></select>
+                            <input type="number" id="gol-sq1-g2" placeholder="Gol" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group" id="f-sq1-g3">
+                        <label>Giocatore 3 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq1-g3"></select>
+                            <input type="number" id="gol-sq1-g3" placeholder="Gol" min="0" value="0">
+                        </div>
                     </div>
                 </div>
-                <div class="form-group" id="f-sq1-g2">
-                    <label>Giocatore 2 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq1-g2"></select>
-                        <input type="number" id="gol-sq1-g2" placeholder="Gol" min="0" value="0">
-                    </div>
-                </div>
-                <div class="form-group" id="f-sq1-g3">
-                    <label>Giocatore 3 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq1-g3"></select>
-                        <input type="number" id="gol-sq1-g3" placeholder="Gol" min="0" value="0">
-                    </div>
-                </div>
-            </div>
 
-            <div class="box-sezione">
-                <h3>🔴 Squadra 2</h3>
-                <div class="form-group" id="f-sq2-g1">
-                    <label>Giocatore 1 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq2-g1" required></select>
-                        <input type="number" id="gol-sq2-g1" placeholder="Gol" min="0" value="0">
+                <div class="squadra-box">
+                    <h3>🔴 Squadra 2</h3>
+                    <div class="form-group" id="f-sq2-g1">
+                        <label>Giocatore 1 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq2-g1" required></select>
+                            <input type="number" id="gol-sq2-g1" placeholder="Gol" min="0" value="0">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group" id="f-sq2-g2">
-                    <label>Giocatore 2 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq2-g2"></select>
-                        <input type="number" id="gol-sq2-g2" placeholder="Gol" min="0" value="0">
+                    <div class="form-group" id="f-sq2-g2">
+                        <label>Giocatore 2 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq2-g2"></select>
+                            <input type="number" id="gol-sq2-g2" placeholder="Gol" min="0" value="0">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group" id="f-sq2-g3">
-                    <label>Giocatore 3 e Gol:</label>
-                    <div class="giocatore-row">
-                        <select id="sq2-g3"></select>
-                        <input type="number" id="gol-sq2-g3" placeholder="Gol" min="0" value="0">
+                    <div class="form-group" id="f-sq2-g3">
+                        <label>Giocatore 3 e Gol:</label>
+                        <div class="giocatore-row">
+                            <select id="sq2-g3"></select>
+                            <input type="number" id="gol-sq2-g3" placeholder="Gol" min="0" value="0">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,7 +315,6 @@
             }
         }
 
-        // Seleziona Giocatore per Modifica
         document.getElementById('select-modifica-giocatore').addEventListener('change', (e) => {
             const nomeSel = e.target.value;
             const gObj = listaGiocatori.find(g => g.nome === nomeSel);
@@ -311,7 +331,6 @@
             }
         });
 
-        // Aggiorna Giocatore
         document.getElementById('btn-aggiorna-giocatore').addEventListener('click', async () => {
             const nomeVecchio = document.getElementById('select-modifica-giocatore').value;
             if (!nomeVecchio) return alert("Seleziona prima un giocatore!");
@@ -350,7 +369,6 @@
             location.reload();
         });
 
-        // Crea Nuovo Giocatore
         document.getElementById('btn-crea-giocatore').addEventListener('click', async () => {
             const nome = document.getElementById('nuovo-nome').value.trim();
             const punti = parseFloat(document.getElementById('nuovo-punti').value) || 1000;
@@ -377,7 +395,6 @@
             location.reload();
         });
 
-        // Calcolo Algoritmo WFER
         function calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode) {
             const num1 = sq1Objs.length;
             const num2 = sq2Objs.length;
@@ -414,7 +431,6 @@
             return { deltaSq1, deltaSq2 };
         }
 
-        // Invio e Registrazione Partita
         document.getElementById('form-partita').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -455,13 +471,11 @@
             const res = calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode);
             const oggi = new Date().toISOString().split('T')[0];
 
-            // Mappa gol singoli per lo storico
             const golMap = {};
             [...golGiocatoriSq1, ...golGiocatoriSq2].forEach(item => {
                 golMap[item.nome] = item.gol;
             });
 
-            // 1. Salva la Partita
             await addDoc(collection(db, "partite"), {
                 squadra1: nomiSq1.join(", "),
                 squadra2: nomiSq2.join(", "),
@@ -476,7 +490,6 @@
                 timestamp: Date.now()
             });
 
-            // 2. Aggiorna Punti WFER dei Giocatori
             for (const g of sq1Objs) {
                 await updateDoc(doc(db, "giocatori", g.idDoc), {
                     punti: Math.round((g.punti + res.deltaSq1) * 10) / 10,
@@ -490,7 +503,6 @@
                 });
             }
 
-            // 3. Aggiorna Totale Gol nella Classifica Marcatori
             const tuttiGol = [...golGiocatoriSq1, ...golGiocatoriSq2];
             for (const item of tuttiGol) {
                 if (item.gol > 0) {

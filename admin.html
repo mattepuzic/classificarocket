@@ -6,13 +6,19 @@
     <title>Admin - Gestione Rocket League</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
         .admin-container {
             max-width: 650px;
-            margin: 20px auto;
+            margin: 0 auto;
             padding: 20px;
             background-color: #1e293b;
             border-radius: 10px;
-            color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .box-sezione {
@@ -77,7 +83,7 @@
 </head>
 <body>
 
-    <h1 style="text-align:center; margin-top:20px;">⚙️ Pannello Admin Rocket League</h1>
+    <h1 style="text-align:center;">⚙️ Pannello Admin Rocket League</h1>
 
     <div class="admin-container">
         
@@ -144,7 +150,7 @@
                 <label>Gol Totali Marcatori:</label>
                 <input type="number" id="edit-gol" min="0" placeholder="Gol Totali">
             </div>
-            <button id="btn-aggiorna-giocatore" class="btn-azione btn-orange">✏️ Aggiorna Dati Giocatore</button>
+            <button id="btn-aggiorna-giocatore" type="button" class="btn-azione btn-orange">✏️ Aggiorna Dati Giocatore</button>
         </div>
 
         <hr class="divisore-admin">
@@ -163,14 +169,14 @@
                 <label>Gol Iniziali (Default: 0):</label>
                 <input type="number" id="nuovo-gol" value="0" min="0">
             </div>
-            <button id="btn-crea-giocatore" class="btn-azione btn-blue">➕ Aggiungi Giocatore</button>
+            <button id="btn-crea-giocatore" type="button" class="btn-azione btn-blue">➕ Aggiungi Giocatore</button>
         </div>
 
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqdkXgmsURF8MGchtfRJnODJz-olwYfw8",
@@ -213,49 +219,51 @@
         modeSel.addEventListener('change', aggiornaInterfaccia);
 
         async function popolaDati() {
-            // Carica Giocatori
-            const qG = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
-            const snapG = await getDocs(qG);
-            listaGiocatori = [];
-            snapG.forEach(d => {
-                const data = d.data();
-                data.idDoc = d.id;
-                listaGiocatori.push(data);
-            });
+            try {
+                // Carica TUTTI i Giocatori senza filtri
+                const snapG = await getDocs(collection(db, "giocatori"));
+                listaGiocatori = [];
+                snapG.forEach(d => {
+                    const data = d.data();
+                    data.idDoc = d.id;
+                    listaGiocatori.push(data);
+                });
 
-            // Carica Marcatori
-            const qM = query(collection(db, "marcatori"), where("gioco", "==", "fifa_24"));
-            const snapM = await getDocs(qM);
-            listaMarcatori = [];
-            snapM.forEach(d => {
-                const data = d.data();
-                data.idDoc = d.id;
-                listaMarcatori.push(data);
-            });
+                // Carica TUTTI i Marcatori
+                const snapM = await getDocs(collection(db, "marcatori"));
+                listaMarcatori = [];
+                snapM.forEach(d => {
+                    const data = d.data();
+                    data.idDoc = d.id;
+                    listaMarcatori.push(data);
+                });
 
-            // Popola tendine per la partita
-            const selectsPartita = ['sq1-g1', 'sq1-g2', 'sq1-g3', 'sq2-g1', 'sq2-g2', 'sq2-g3'];
-            selectsPartita.forEach(sId => {
-                const el = document.getElementById(sId);
-                if (el) {
-                    el.innerHTML = '<option value="">-- Seleziona --</option>';
-                    listaGiocatori.forEach(g => {
-                        el.innerHTML += `<option value="${g.nome}">${g.nome} (${g.punti} pt)</option>`;
-                    });
-                }
-            });
+                // Popola selezioni partite
+                const selectsPartita = ['sq1-g1', 'sq1-g2', 'sq1-g3', 'sq2-g1', 'sq2-g2', 'sq2-g3'];
+                selectsPartita.forEach(sId => {
+                    const el = document.getElementById(sId);
+                    if (el) {
+                        el.innerHTML = '<option value="">-- Seleziona --</option>';
+                        listaGiocatori.forEach(g => {
+                            el.innerHTML += `<option value="${g.nome}">${g.nome} (${g.punti} pt)</option>`;
+                        });
+                    }
+                });
 
-            // Popola tendina per modifica giocatore
-            const selectMod = document.getElementById('select-modifica-giocatore');
-            selectMod.innerHTML = '<option value="">-- Seleziona Giocatore --</option>';
-            listaGiocatori.forEach(g => {
-                selectMod.innerHTML += `<option value="${g.nome}">${g.nome}</option>`;
-            });
+                // Popola selezione modifica
+                const selectMod = document.getElementById('select-modifica-giocatore');
+                selectMod.innerHTML = '<option value="">-- Seleziona Giocatore --</option>';
+                listaGiocatori.forEach(g => {
+                    selectMod.innerHTML += `<option value="${g.nome}">${g.nome}</option>`;
+                });
 
-            aggiornaInterfaccia();
+                aggiornaInterfaccia();
+            } catch (e) {
+                console.error("Errore caricamento dati Firebase:", e);
+            }
         }
 
-        // Quando selezioni un giocatore da modificare, riempi automaticamente i suoi dati
+        // Seleziona Giocatore da Modificare
         document.getElementById('select-modifica-giocatore').addEventListener('change', (e) => {
             const nomeSel = e.target.value;
             const gObj = listaGiocatori.find(g => g.nome === nomeSel);
@@ -272,7 +280,7 @@
             }
         });
 
-        // Pulsante: Aggiorna Giocatore Esistente
+        // Modifica Giocatore Esistente
         document.getElementById('btn-aggiorna-giocatore').addEventListener('click', async () => {
             const nomeVecchio = document.getElementById('select-modifica-giocatore').value;
             if (!nomeVecchio) return alert("Seleziona prima un giocatore!");
@@ -288,7 +296,6 @@
             const gObj = listaGiocatori.find(g => g.nome === nomeVecchio);
             const mObj = listaMarcatori.find(m => m.nome === nomeVecchio);
 
-            // Update Giocatore
             if (gObj) {
                 await updateDoc(doc(db, "giocatori", gObj.idDoc), {
                     nome: nuovoNome,
@@ -296,7 +303,6 @@
                 });
             }
 
-            // Update o Crea Marcatore
             if (mObj) {
                 await updateDoc(doc(db, "marcatori", mObj.idDoc), {
                     nome: nuovoNome,
@@ -304,7 +310,6 @@
                 });
             } else {
                 await addDoc(collection(db, "marcatori"), {
-                    gioco: "fifa_24",
                     nome: nuovoNome,
                     gol: nuoviGol
                 });
@@ -314,7 +319,7 @@
             location.reload();
         });
 
-        // Pulsante: Aggiungi Nuovo Giocatore
+        // Aggiungi Nuovo Giocatore
         document.getElementById('btn-crea-giocatore').addEventListener('click', async () => {
             const nome = document.getElementById('nuovo-nome').value.trim();
             const punti = parseFloat(document.getElementById('nuovo-punti').value) || 1000;
@@ -322,22 +327,17 @@
 
             if (!nome) return alert("Inserisci il nome del nuovo giocatore!");
 
-            // Verifica che non esista già
             if (listaGiocatori.some(g => g.nome.toLowerCase() === nome.toLowerCase())) {
                 return alert("Esiste già un giocatore con questo nome!");
             }
 
-            // Aggiungi in giocatori
             await addDoc(collection(db, "giocatori"), {
-                gioco: "fifa_24",
                 nome: nome,
                 punti: punti,
                 ultimaVariazione: 0
             });
 
-            // Aggiungi in marcatori
             await addDoc(collection(db, "marcatori"), {
-                gioco: "fifa_24",
                 nome: nome,
                 gol: gol
             });
@@ -346,7 +346,7 @@
             location.reload();
         });
 
-        // Algoritmo Calcolo WFER Partite
+        // Calcolo Algoritmo WFER
         function calcolaPunti(sq1Objs, sq2Objs, gol1, gol2, mode) {
             const num1 = sq1Objs.length;
             const num2 = sq2Objs.length;
@@ -412,7 +412,6 @@
             const oggi = new Date().toISOString().split('T')[0];
 
             await addDoc(collection(db, "partite"), {
-                gioco: "fifa_24",
                 squadra1: nomiSq1.join(", "),
                 squadra2: nomiSq2.join(", "),
                 listaSq1: nomiSq1,

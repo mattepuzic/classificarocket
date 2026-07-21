@@ -7,27 +7,40 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Titolo della settimana */
+        .settimana-titolo {
+            color: #38bdf8;
+            border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+            padding-bottom: 5px;
+            margin: 25px 0 15px 0;
+            font-size: 1.2rem;
+            text-align: left;
+        }
+
+        /* Card della singola partita */
         .partita-card {
-            position: relative; /* Indispensabile per posizionare il badge in basso a destra */
-            padding: 18px 15px;
-            margin-bottom: 15px;
+            position: relative; /* FONDAMENTALE per ancorare il badge ± */
+            padding: 16px 15px;
+            margin-bottom: 12px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
         }
-        /* Badge in basso a destra come nello screenshot */
+
+        /* Badge ±punteggio in basso a destra */
         .delta-in-basso-destra {
             position: absolute;
-            bottom: 10px;
-            right: 15px;
-            font-size: 1.05rem;
+            bottom: 8px;
+            right: 12px;
+            font-size: 0.95rem;
             font-weight: bold;
             font-family: monospace;
-            color: #38bdf8; /* Azzurro per far risaltare il ± */
-            background-color: rgba(15, 23, 42, 0.6);
-            padding: 2px 8px;
+            color: #38bdf8;
+            background-color: rgba(15, 23, 42, 0.8);
+            padding: 3px 8px;
             border-radius: 6px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
         }
     </style>
 </head>
@@ -106,6 +119,15 @@
         let grafico1 = null, grafico2 = null;
         const COLORI = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
 
+        // Funzione per ottenere il numero di settimana dall'anno
+        function getNumeroSettimana(d) {
+            const date = new Date(d.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
         function caricaDati() {
             // 1. Carica Giocatori
             const qGen = query(collection(db, "giocatori"), where("gioco", "==", "fifa_24"));
@@ -133,33 +155,55 @@
                         const listaPartite = [];
                         snapPart.forEach(doc => listaPartite.push(doc.data()));
                         
-                        // Ordina temporale standard per i grafici
+                        // Ordina in ordine cronologico (dalla prima all'ultima) per il grafico
                         listaPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-                        // INVERSIONE ORDINE STORICO: Invertiamo l'array per mostrare la prima partita in alto
-                        const partiteInvertite = listaPartite.slice().reverse();
+                        // Assegna numero progressivo globale ad ogni partita
+                        listaPartite.forEach((p, index) => {
+                            p.numProgressivo = index + 1;
+                        });
 
+                        // RENDER STORICO PARTITE (Dalla più recente in alto alla più vecchia in basso)
                         const containerPartite = document.getElementById('lista-partite');
                         containerPartite.innerHTML = '';
-                        let numP = 1;
 
-                        partiteInvertite.forEach(p => {
-                            const mod = p.modalita ? ` [${p.modalita}]` : '';
-                            
-                            // Recupera il valore assoluto della variazione punti
-                            const valDelta = Math.abs(p.deltaSq1 || p.deltaSq2 || 0);
+                        // Invertiamo per lo storico (la più recente appare prima)
+                        const partitePerStorico = listaPartite.slice().reverse();
 
-                            containerPartite.innerHTML += `
-                                <div class="partita-card">
-                                    <small style="color:#94a3b8;">🎮 Partita #${numP++}${mod} - 📅 ${p.data}</small><br>
-                                    <div style="margin-top: 6px; font-size: 1.15rem;">
-                                        <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
-                                    </div>
-                                    <div class="delta-in-basso-destra">
-                                        ±${valDelta}
-                                    </div>
-                                </div>`;
+                        // Raggruppamento per Settimana
+                        const gruppiSettimana = {};
+                        partitePerStorico.forEach(p => {
+                            const d = p.data ? new Date(p.data) : new Date(p.timestamp || Date.now());
+                            const numSett = getNumeroSettimana(d);
+                            const anno = d.getFullYear();
+                            const chiave = `Settimana ${numSett} (${anno})`;
+
+                            if (!gruppiSettimana[chiave]) {
+                                gruppiSettimana[chiave] = [];
+                            }
+                            gruppiSettimana[chiave].push(p);
                         });
+
+                        // Renderizza ogni blocco settimanale
+                        for (const [settimana, partiteInSettimana] of Object.entries(gruppiSettimana)) {
+                            containerPartite.innerHTML += `<div class="settimana-titolo">📅 ${settimana}</div>`;
+
+                            partiteInSettimana.forEach(p => {
+                                const mod = p.modalita ? ` [${p.modalita}]` : '';
+                                const valDelta = Math.abs(p.deltaSq1 || p.deltaSq2 || 0);
+
+                                containerPartite.innerHTML += `
+                                    <div class="partita-card">
+                                        <small style="color:#94a3b8;">🎮 Partita #${p.numProgressivo}${mod} - 📅 ${p.data}</small><br>
+                                        <div style="margin-top: 6px; font-size: 1.15rem;">
+                                            <strong>${p.squadra1}</strong> <span class="gol">${p.gol1} - ${p.gol2}</span> <strong>${p.squadra2}</strong>
+                                        </div>
+                                        <div class="delta-in-basso-destra">
+                                            ±${valDelta}
+                                        </div>
+                                    </div>`;
+                            });
+                        }
 
                         elaboraDatiEGrafici(listaGiocatori, listaPartite);
                     });

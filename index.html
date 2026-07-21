@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo EA FC - Classifiche e Grafici</title>
+    <title>Torneo Rocket League - Classifiche e Grafici</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <h1>🏆 Classifica EA FC / FIFA</h1>
+    <h1>🏆 Classifica Rocket League</h1>
 
     <div style="margin-bottom: 25px;">
         <a href="punteggi.html" class="btn-link">ℹ️ Come funziona il Punteggio WFER?</a>
@@ -39,7 +39,7 @@
     <hr class="divisore">
 
     <div class="sezione-classifica">
-        <h2>⚽ Classifica Marcatori</h2>
+        <h2>⚽ Classifica Marcatori (Gol)</h2>
         <table>
             <thead>
                 <tr>
@@ -59,7 +59,7 @@
 
     <hr class="divisore">
 
-    <h2>⚽ Ultimi Risultati Partite</h2>
+    <h2>🚀 Ultimi Risultati Partite</h2>
     <div id="lista-partite"></div>
 
     <script type="module">
@@ -125,7 +125,6 @@
                                 </div>`;
                         });
 
-                        // Calcola Storico Punti/Gol e Renderizza Tabella Generale + Grafici
                         elaboraDatiEGrafici(listaGiocatori, listaPartite);
                     });
                 });
@@ -137,18 +136,16 @@
             const storiciPunti = {};
             const storiciGol = {};
 
-            // 1. Ricostruzione dell'andamento punti parte dal Punteggio Attuale REALE del DB
             giocatori.forEach(g => {
                 const arrPunti = new Array(numPartiteTotali + 1);
-                arrPunti[numPartiteTotali] = g.punti; // Punteggio attuale
+                arrPunti[numPartiteTotali] = g.punti;
                 storiciPunti[g.nome] = arrPunti;
 
                 const arrGol = new Array(numPartiteTotali + 1);
-                arrGol[numPartiteTotali] = 0; // Verrà popolato dopo
+                arrGol[numPartiteTotali] = 0;
                 storiciGol[g.nome] = arrGol;
             });
 
-            // Ricostruzione a ritroso dell'andamento punti
             for (let i = numPartiteTotali - 1; i >= 0; i--) {
                 const p = partite[i];
                 const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);
@@ -170,7 +167,6 @@
                 });
             }
 
-            // Ricostruzione in avanti dei gol cumulativi
             giocatori.forEach(g => {
                 let sommaGol = 0;
                 storiciGol[g.nome][0] = 0;
@@ -182,10 +178,7 @@
                 });
             });
 
-            // 2. Calcolo Trend Posizioni Ultime 3 Partite
             const idxTrePartiteFa = Math.max(0, numPartiteTotali - 3);
-            
-            // Classifica N partite fa
             const rankingPassato = giocatori.map(g => ({
                 nome: g.nome,
                 punti: storiciPunti[g.nome][idxTrePartiteFa]
@@ -196,7 +189,6 @@
                 posizioniPassate[item.nome] = index + 1;
             });
 
-            // Classifica Attuale
             giocatori.sort((a, b) => b.punti - a.punti);
 
             const tbodyGen = document.getElementById('body-generale');
@@ -228,7 +220,6 @@
                     </tr>`;
             });
 
-            // 3. Renderizza i Grafici
             const etichettePartite = ['Inizio', ...partite.map((_, i) => `Partita ${i + 1}`)];
             const datasetsPunti = [];
             const datasetsGol = [];

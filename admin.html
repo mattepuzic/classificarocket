@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pannello Admin - EA FC</title>
+    <title>Pannello Admin - Rocket League</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,10 +22,10 @@
     </div>
 
     <div id="admin-panel" style="display: none;">
-        <h1>⚙️ Pannello Amministratore</h1>
+        <h1>⚙️ Pannello Amministratore (Rocket League)</h1>
 
         <div class="card card-larga">
-            <h2>⚽ Registra Nuova Partita</h2>
+            <h2>🚀 Registra Nuova Partita</h2>
             
             <div style="margin-bottom: 20px; text-align: center;">
                 <label for="admin-modalita"><strong>Modalità di Gioco:</strong></label><br>
@@ -152,11 +152,68 @@
                     </tr>`;
             }
 
+            // RIGA TOTALE GOL (Opzionale per quando non si conoscono i gol singoli)
+            html += `
+                <tr style="border-top: 2px solid #334155; background-color: rgba(255,255,255,0.03);">
+                    <td style="padding: 10px; text-align: right; font-weight: bold; color: #10b981;">TOTALE SQUADRA 1:</td>
+                    <td style="padding: 10px;">
+                        <input type="number" id="totale-gol-sq1" min="0" value="0" style="width: 65px; text-align: center; padding: 6px; font-weight: bold; border: 1px solid #10b981;">
+                    </td>
+                    <td></td>
+                    <td style="padding: 10px;">
+                        <input type="number" id="totale-gol-sq2" min="0" value="0" style="width: 65px; text-align: center; padding: 6px; font-weight: bold; border: 1px solid #10b981;">
+                    </td>
+                    <td style="padding: 10px; text-align: left; font-weight: bold; color: #10b981;">: TOTALE SQUADRA 2</td>
+                </tr>`;
+
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
 
-        // SALVATAGGIO PARTITA CON CALCOLO
+        // Funzione ausiliaria per distribuire i gol in automatico
+        async function distribuisciGolAutomatici(listaGiocatori, golTotali) {
+            const mappaGol = {};
+            if (listaGiocatori.length === 0 || golTotali <= 0) return mappaGol;
+
+            // Recupera gol totali dei giocatori dalla classifica marcatori
+            const datiMarcatori = [];
+            for (const nome of listaGiocatori) {
+                const snap = await getDoc(doc(db, "marcatori", `fifa_24_${nome}`));
+                const golAttuali = snap.exists() ? snap.data().gol : 0;
+                datiMarcatori.push({ nome, golAttuali });
+            }
+
+            // Ordina dal giocatore con MENO gol a quello con PIÙ gol
+            datiMarcatori.sort((a, b) => a.golAttuali - b.golAttuali);
+
+            const n = listaGiocatori.length;
+            const base = Math.floor(golTotali / n);
+            const resto = golTotali % n;
+
+            // Assegna la quota base a tutti
+            datiMarcatori.forEach(g => {
+                mappaGol[g.nome] = base;
+            });
+
+            // Gestione dei resti
+            if (resto === 1) {
+                // 1 gol in più -> al primo (chi ha meno gol in classifica)
+                mappaGol[datiMarcatori[0].nome] += 1;
+            } else if (resto === 2) {
+                if (n === 2) {
+                    // Se in 2vs2 avanzano 2 gol (non capita con modulo %, ma per sicurezza)
+                    mappaGol[datiMarcatori[0].nome] += 1;
+                    mappaGol[datiMarcatori[1].nome] += 1;
+                } else if (n >= 3) {
+                    // Se in 3vs3 avanzano 2 gol -> 1 all'ultimo (indice 0) e 1 al penultimo (indice 1)
+                    mappaGol[datiMarcatori[0].nome] += 1;
+                    mappaGol[datiMarcatori[1].nome] += 1;
+                }
+            }
+
+            return mappaGol;
+        }
+
         document.getElementById('btn-salva-partita').addEventListener('click', async () => {
             const modalita = document.getElementById('admin-modalita').value;
             const data = document.getElementById('data-partita').value;
@@ -166,9 +223,12 @@
             const selectsSq2 = document.querySelectorAll('.select-sq2');
             const inputsGolSq2 = document.querySelectorAll('.gol-sq2');
 
+            const inputTotaleSq1 = parseInt(document.getElementById('totale-gol-sq1').value) || 0;
+            const inputTotaleSq2 = parseInt(document.getElementById('totale-gol-sq2').value) || 0;
+
             const sq1Giocatori = [], sq2Giocatori = [];
-            let golSq1 = 0, golSq2 = 0;
-            const golIndividuali = {};
+            let sommaGolSingoliSq1 = 0, sommaGolSingoliSq2 = 0;
+            const golIndividualiManuali = {};
 
             for (let i = 0; i < selectsSq1.length; i++) {
                 const g1 = selectsSq1[i].value;
@@ -178,13 +238,13 @@
 
                 if (g1) {
                     sq1Giocatori.push(g1);
-                    golSq1 += gol1;
-                    golIndividuali[g1] = (golIndividuali[g1] || 0) + gol1;
+                    sommaGolSingoliSq1 += gol1;
+                    if (gol1 > 0) golIndividualiManuali[g1] = gol1;
                 }
                 if (g2) {
                     sq2Giocatori.push(g2);
-                    golSq2 += gol2;
-                    golIndividuali[g2] = (golIndividuali[g2] || 0) + gol2;
+                    sommaGolSingoliSq2 += gol2;
+                    if (gol2 > 0) golIndividualiManuali[g2] = gol2;
                 }
             }
 
@@ -193,10 +253,34 @@
                 return;
             }
 
+            // Determinazione gol finali Squadra 1
+            let golSq1 = 0;
+            let mapGolSq1 = {};
+            if (sommaGolSingoliSq1 > 0) {
+                golSq1 = sommaGolSingoliSq1;
+                sq1Giocatori.forEach(g => { mapGolSq1[g] = golIndividualiManuali[g] || 0; });
+            } else {
+                golSq1 = inputTotaleSq1;
+                mapGolSq1 = await distribuisciGolAutomatici(sq1Giocatori, inputTotaleSq1);
+            }
+
+            // Determinazione gol finali Squadra 2
+            let golSq2 = 0;
+            let mapGolSq2 = {};
+            if (sommaGolSingoliSq2 > 0) {
+                golSq2 = sommaGolSingoliSq2;
+                sq2Giocatori.forEach(g => { mapGolSq2[g] = golIndividualiManuali[g] || 0; });
+            } else {
+                golSq2 = inputTotaleSq2;
+                mapGolSq2 = await distribuisciGolAutomatici(sq2Giocatori, inputTotaleSq2);
+            }
+
+            const golIndividualiFinali = { ...mapGolSq1, ...mapGolSq2 };
+
             const mappaImportanza = { "1vs1": 20, "2vs2": 40, "3vs3": 60 };
             const I = mappaImportanza[modalita];
 
-            // 1. Punteggi Attuali
+            // 1. Recupero Punteggi Attuali
             let sommaPuntiSq1 = 0, sommaPuntiSq2 = 0;
             const datiSq1 = [], datiSq2 = [];
 
@@ -233,7 +317,7 @@
             const deltaSq1 = Math.round((I * (W1 - We1) * G) * 10) / 10;
             const deltaSq2 = Math.round((I * (W2 - We2) * G) * 10) / 10;
 
-            // 3. Salva nuovi punti
+            // 3. Salva Punti Aggiornati
             for (const item of datiSq1) {
                 const nuoviPunti = Math.round((item.punti + deltaSq1) * 10) / 10;
                 await setDoc(doc(db, "giocatori", `fifa_24_wfer_${item.nome}`), {
@@ -257,14 +341,14 @@
             }
 
             // 4. Salva Marcatori
-            for (const [nome, golFatti] of Object.entries(golIndividuali)) {
+            for (const [nome, golFatti] of Object.entries(golIndividualiFinali)) {
                 const refM = doc(db, "marcatori", `fifa_24_${nome}`);
                 const snapM = await getDoc(refM);
                 const attuali = snapM.exists() ? snapM.data().gol : 0;
                 await setDoc(refM, { gioco: "fifa_24", nome, gol: attuali + golFatti });
             }
 
-            // 5. Salva Partita con il dettaglio giocatori per storico grafico
+            // 5. Salva Partita
             await addDoc(collection(db, "partite"), {
                 gioco: "fifa_24",
                 modalita,
@@ -278,7 +362,7 @@
                 deltaSq2,
                 listaSq1: sq1Giocatori,
                 listaSq2: sq2Giocatori,
-                golMap: golIndividuali,
+                golMap: golIndividualiFinali,
                 timestamp: Date.now()
             });
 
@@ -286,7 +370,6 @@
             generaGrigliaForm();
         });
 
-        // Aggiungi Giocatore Manuale
         document.getElementById('btn-salva-giocatore').addEventListener('click', async () => {
             const nome = document.getElementById('nome-giocatore').value.trim();
             const punti = parseFloat(document.getElementById('punti-giocatore').value);

@@ -76,14 +76,14 @@
     <hr class="divisore">
 
     <div class="sezione-classifica">
-        <h2>⚽ Classifica Marcatori (Gol)</h2>
+        <h2>⚽ Classifica Marcatori & Media Gol</h2>
         <table>
             <thead>
                 <tr>
                     <th>Pos</th>
                     <th>Giocatore</th>
                     <th>Gol Totali</th>
-                    <th>Partite</th>
+                    <th>Partite Giocate</th>
                     <th>Media Gol/Partita</th>
                 </tr>
             </thead>
@@ -121,7 +121,6 @@
         let grafico1 = null, grafico2 = null;
         const COLORI = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
 
-        // Variabili globali per memorizzare i dati
         let datiGiocatori = [];
         let datiMarcatori = [];
         let datiPartite = [];
@@ -138,34 +137,35 @@
         function aggiornaInterfaccia() {
             if (!datiGiocatori.length && !datiPartite.length) return;
 
-            // 1. Calcolo del numero di partite effettivamente giocate da ciascun giocatore
+            // 1. Calcola le partite giocate da ogni giocatore dallo storico partite
             const partiteGiocateMap = {};
             datiPartite.forEach(p => {
                 const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);
                 const sq2 = p.listaSq2 || (p.squadra2 ? p.squadra2.split(', ').map(s => s.trim()) : []);
-                const partecipanti = [...sq1, ...sq2];
+                const tuttiIPartecipanti = [...sq1, ...sq2];
 
-                partecipanti.forEach(nome => {
+                tuttiIPartecipanti.forEach(nome => {
                     if (nome) {
                         partiteGiocateMap[nome] = (partiteGiocateMap[nome] || 0) + 1;
                     }
                 });
             });
 
-            // 2. Render Marcatori (con Partite Giocate e Media Gol/Partita)
+            // 2. Render Marcatori + Partite Giocate + Media Gol
             const tbodyMarc = document.getElementById('body-marcatori');
             tbodyMarc.innerHTML = '';
             let posM = 1;
+
             datiMarcatori.forEach(d => {
-                const nPartite = partiteGiocateMap[d.nome] || 0;
-                const mediaGol = nPartite > 0 ? (d.gol / nPartite).toFixed(2) : "0.00";
+                const pGiocate = partiteGiocateMap[d.nome] || 0;
+                const mediaGol = pGiocate > 0 ? (d.gol / pGiocate).toFixed(2) : "0.00";
 
                 tbodyMarc.innerHTML += `
                     <tr>
                         <td>${posM++}</td>
                         <td><strong>${d.nome}</strong></td>
                         <td><strong>${d.gol}</strong></td>
-                        <td>${nPartite}</td>
+                        <td>${pGiocate}</td>
                         <td><strong style="color:#38bdf8;">${mediaGol}</strong></td>
                     </tr>`;
             });
@@ -234,7 +234,6 @@
                 datiPartite = [];
                 snap.forEach(doc => datiPartite.push(doc.data()));
                 
-                // Ordine cronologico
                 datiPartite.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                 datiPartite.forEach((p, index) => {
                     p.numProgressivo = index + 1;
@@ -259,7 +258,6 @@
                 storiciGol[g.nome] = arrGol;
             });
 
-            // Ricostruzione dello storico punti
             for (let i = numPartiteTotali - 1; i >= 0; i--) {
                 const p = partite[i];
                 const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);

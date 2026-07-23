@@ -83,6 +83,8 @@
                     <th>Pos</th>
                     <th>Giocatore</th>
                     <th>Gol Totali</th>
+                    <th>Partite</th>
+                    <th>Media Gol/Partita</th>
                 </tr>
             </thead>
             <tbody id="body-marcatori"></tbody>
@@ -119,7 +121,7 @@
         let grafico1 = null, grafico2 = null;
         const COLORI = ['#10b981', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
 
-        // Variabili globali per memorizzare i dati senza listener annidati
+        // Variabili globali per memorizzare i dati
         let datiGiocatori = [];
         let datiMarcatori = [];
         let datiPartite = [];
@@ -136,15 +138,39 @@
         function aggiornaInterfaccia() {
             if (!datiGiocatori.length && !datiPartite.length) return;
 
-            // 1. Render Marcatori
+            // 1. Calcolo del numero di partite effettivamente giocate da ciascun giocatore
+            const partiteGiocateMap = {};
+            datiPartite.forEach(p => {
+                const sq1 = p.listaSq1 || (p.squadra1 ? p.squadra1.split(', ').map(s => s.trim()) : []);
+                const sq2 = p.listaSq2 || (p.squadra2 ? p.squadra2.split(', ').map(s => s.trim()) : []);
+                const partecipanti = [...sq1, ...sq2];
+
+                partecipanti.forEach(nome => {
+                    if (nome) {
+                        partiteGiocateMap[nome] = (partiteGiocateMap[nome] || 0) + 1;
+                    }
+                });
+            });
+
+            // 2. Render Marcatori (con Partite Giocate e Media Gol/Partita)
             const tbodyMarc = document.getElementById('body-marcatori');
             tbodyMarc.innerHTML = '';
             let posM = 1;
             datiMarcatori.forEach(d => {
-                tbodyMarc.innerHTML += `<tr><td>${posM++}</td><td><strong>${d.nome}</strong></td><td><strong>${d.gol}</strong></td></tr>`;
+                const nPartite = partiteGiocateMap[d.nome] || 0;
+                const mediaGol = nPartite > 0 ? (d.gol / nPartite).toFixed(2) : "0.00";
+
+                tbodyMarc.innerHTML += `
+                    <tr>
+                        <td>${posM++}</td>
+                        <td><strong>${d.nome}</strong></td>
+                        <td><strong>${d.gol}</strong></td>
+                        <td>${nPartite}</td>
+                        <td><strong style="color:#38bdf8;">${mediaGol}</strong></td>
+                    </tr>`;
             });
 
-            // 2. Render Storico Partite
+            // 3. Render Storico Partite
             const containerPartite = document.getElementById('lista-partite');
             containerPartite.innerHTML = '';
 
@@ -183,7 +209,7 @@
                 });
             }
 
-            // 3. Render Classifica Generale e Grafici
+            // 4. Render Classifica Generale e Grafici
             elaboraDatiEGrafici(datiGiocatori, datiPartite);
         }
 

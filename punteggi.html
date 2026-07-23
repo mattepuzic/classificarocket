@@ -72,22 +72,23 @@
             overflow-x: auto;
         }
 
-        /* Rimozione completa dei pallini e delle liste classiche */
-        ul {
+        /* Rimozione assoluta dei pallini di tutti i tipi */
+        ul, ol, li {
             list-style: none !important;
+            list-style-type: none !important;
             padding-left: 0 !important;
             margin-left: 0 !important;
+        }
+
+        li::before, li::after {
+            content: "" !important;
+            display: none !important;
         }
 
         ul li {
             margin-bottom: 12px;
             line-height: 1.5;
             color: #cbd5e1;
-            padding-left: 0 !important;
-        }
-
-        ul li::before {
-            content: none !important; /* Rimuove qualsiasi pallino personalizzato */
         }
 
         ul ul {
